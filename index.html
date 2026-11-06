@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    
+    <style>
+    /* De lege achtergrond van de balk */
+    .progress-bar-container {
+        width: 150px;
+        background-color: #e0e0e0;
+        border-radius: 4px;
+        overflow: hidden;
+        display: inline-block;
+    }
+    /* Het groene gedeelte dat meegroeit */
+    .progress-bar-fill {
+        height: 20px;
+        background-color: #4CAF50;
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+    </style>
+</head>
+<body>
+    <div class="topnav">
+        <a href="index.html">Home</a>
+        <a href="userForm.html" id="opdrachten-link" style="display: none;">Opdrachten</a>
+        <a href="https://www.aivd.nl/documenten/2025/12/10/aivd-kerstpuzzel-2025">Kerstpuzzel AIVD</a>
+        <a href="login.html" id="login-link">Inloggen</a>
+        <a href="signup.html" id="signup-link">Aanmelden</a>
+    </div> 
+
+    <h1>AIVD Kerstpuzzel 2026</h1>
+
+    <h2>Leaderboard</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Naam</th>
+                <th>Opgelost</th>
+                <th>Voortgang</th>
+            </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+            <!-- Javascript fills the leaderboard automatically-->
+        </tbody>
+    </table>
+
+    <script src="leaderboard.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let ingelogdeUser = localStorage.getItem("ingelogdeGebruiker");
+            let opdrachtenLink = document.getElementById("opdrachten-link");
+
+            if (ingelogdeUser) {
+                if (opdrachtenLink) {
+                    opdrachtenLink.style.display = "inline";
+                }
+
+                let loginLink = document.getElementById("login-link");
+                let signupLink = document.getElementById("signup-link");
+                if (loginLink) loginLink.remove();
+                if (signupLink) signupLink.remove();
+
+                let nav = document.querySelector(".topnav");
+                if (nav) {
+                    // Change de login/signup buttons with a welcome message and a logout button
+                    nav.innerHTML += ` | <span>Ingelogd als: <strong>${ingelogdeUser}</strong></span> <a href="#" id="logout-btn">Uitloggen</a>`;
+                    
+                    // Event handler for logout button
+                    document.getElementById("logout-btn").addEventListener("click", function(e) {
+                        e.preventDefault();
+                        localStorage.removeItem("ingelogdeGebruiker");
+                        window.location.reload();
+                    });
+                }
+            } else {
+                if (opdrachtenLink) {
+                    opdrachtenLink.style.display = "none";
+                }
+            }
+        });
+    </script>
+</body>
+</html>

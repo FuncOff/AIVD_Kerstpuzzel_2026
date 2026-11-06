@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <div class="topnav">
+        <a href="index.html">Home</a>
+        <a href="userForm.html">Opdrachten</a>
+        <a href="https://www.aivd.nl/documenten/2025/12/10/aivd-kerstpuzzel-2025">Kerstpuzzel AIVD</a>
+        <a href="login.html" id="login-link">Inloggen</a>
+        <a href="signup.html" id="signup-link">Aanmelden</a>
+    </div>
+
+    <h1>Checklist puzzels</h1>
+
+    <form id="puzzel-invoer-form">
+        <h3>Afgevinkte puzzels:</h3>
+        <label><input type="checkbox" class="puzzel-check" value="1"> Puzzel 1</label><br>
+        <label><input type="checkbox" class="puzzel-check" value="2"> Puzzel 2</label><br>
+        <label><input type="checkbox" class="puzzel-check" value="3"> Puzzel 3</label><br>
+        <label><input type="checkbox" class="puzzel-check" value="4"> Puzzel 4</label><br>
+        <label><input type="checkbox" class="puzzel-check" value="5"> Puzzel 5</label><br><br>
+
+        <button type="submit">Opslaan en naar Leaderboard</button>
+    </form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let ingelogdeUser = localStorage.getItem("ingelogdeGebruiker");
+        if (ingelogdeUser) {
+            let loginLink = document.getElementById("login-link");
+            let signupLink = document.getElementById("signup-link");
+
+            if (loginLink) loginLink.remove();
+            if (signupLink) signupLink.remove();
+            
+            let nav = document.querySelector(".topnav");
+            if (nav) {
+                nav.innerHTML += ` | <span>Ingelogd als: <strong>${ingelogdeUser}</strong></span> <a href="#" id="logout-btn">Uitloggen</a>`;
+                
+                document.getElementById("logout-btn").addEventListener("click", function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem("ingelogdeGebruiker");
+                    window.location.reload();
+                });
+            }
+        } else {
+            // Als je niet bent ingelogd en op de opdrachtenpagina komt, stuur direct door naar login
+            alert("Je moet eerst inloggen om opdrachten in te vullen!");
+            window.location.href = "login.html";
+        }
+    });
+
+    document.getElementById("puzzel-invoer-form").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        let naam = localStorage.getItem("ingelogdeGebruiker");
+        
+        if (!naam) {
+            alert("Je bent niet ingelogd!");
+            window.location.href = "login.html";
+            return;
+        }
+
+        let vinkjes = document.querySelectorAll(".puzzel-check");
+        let score = 0;
+        vinkjes.forEach(cb => {
+            if (cb.checked) score++;
+        });
+
+        // Stuur data naar de Flask backend
+        let response = await fetch("/api/deelnemers", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ naam: naam, score: score })
+        });
+
+        if (response.ok) {
+            window.location.href = "index.html";
+        } else {
+            alert("Er is iets misgegaan bij het opslaan.");
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <div class="topnav">
+        <a href="index.html">Home</a>
+        <a href="login.html">Inloggen</a>
+        <a href="signup.html">Aanmelden</a>
+    </div>
+
+    <h1>Inloggen</h1>
+
+    <form id="login-form">
+        <label for="gebruikersnaam">Gebruikersnaam:</label><br>
+        <input type="text" id="gebruikersnaam" required><br><br>
+
+        <label for="wachtwoord">Wachtwoord:</label><br>
+        <input type="password" id="wachtwoord" required><br><br>
+
+        <button type="submit">Inloggen</button>
+    </form>
+
+    <script>
+        // event listener for login
+        document.getElementById("login-form").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            let gebruikersnaam = document.getElementById("gebruikersnaam").value;
+            let wachtwoord = document.getElementById("wachtwoord").value;
+
+            // Information sent to js
+            let response = await fetch("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ gebruikersnaam, wachtwoord })
+            });
+
+            // await result from backend for error handling
+            let result = await response.json();
+            if (response.ok) {
+                alert("Succesvol ingelogd!");
+                // Sla eventueel op in localStorage dat je ingelogd bent
+                localStorage.setItem("ingelogdeGebruiker", gebruikersnaam);
+                window.location.href = "index.html";
+            } else {
+                alert(result.error || "Inloggen mislukt");
+            }
+        });
+    </script>
+</body>
+</html>
