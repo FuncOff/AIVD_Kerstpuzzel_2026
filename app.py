@@ -26,6 +26,16 @@ def init_db():
             wachtwoord_hash TEXT NOT NULL
         )
     """)
+
+    # Nieuwe tabel om per gebruiker bij te houden welke puzzels zijn opgelost
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS gebruiker_puzzels (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            naam TEXT NOT NULL,
+            puzzel_nr INTEGER NOT NULL,
+            UNIQUE(naam, puzzel_nr)
+        )
+    """)
     
     conn.commit()
     conn.close()
@@ -34,8 +44,12 @@ init_db()
 
 # --- Pagina Routes ---
 @app.route("/")
-def index():
-    return app.send_static_file("index.html")
+def leaderboard():
+    return app.send_static_file("leaderboard.html")
+
+@app.route("/questions.html")
+def questions():
+    return app.send_static_file("questions.html")
 
 @app.route("/userForm.html")
 def user_form():
@@ -66,21 +80,76 @@ def get_deelnemers():
 def add_or_update_deelnemer():
     data = request.json
     naam = data.get("naam")
-    score = data.get("score")
+    puzzels = data.get("puzzels", [])  # Ontvang de lijst met puzzelnummers
 
-    if not naam or score is None:
+    if not naam:
         return jsonify({"error": "Ongeldige invoer"}), 400
+
+    # Bereken de score automatisch op basis van hoeveel puzzels er zijn aangevinkt
+    score = len(puzzels)
 
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
+    
+    # 1. Update de totale score in de deelnemers-tabel
     cursor.execute("""
         INSERT INTO deelnemers (naam, score) VALUES (?, ?)
         ON CONFLICT(naam) DO UPDATE SET score=excluded.score
     """, (naam, score))
+    
+    # 2. Verwijder de oude vinkjes van deze gebruiker en sla de nieuwe op
+    cursor.execute("DELETE FROM gebruiker_puzzels WHERE naam = ?", (naam,))
+    for p_nr in puzzels:
+        cursor.execute("INSERT OR IGNORE INTO gebruiker_puzzels (naam, puzzel_nr) VALUES (?, ?)", (naam, p_nr))
+        
     conn.commit()
     conn.close()
     return jsonify({"message": "Succesvol opgeslagen"}), 200
 
+# --- API Endpoint om opgeslagen puzzels van een gebruiker op te halen ---
+@app.route("/api/gebruiker-puzzels/<naam>", methods=["GET"])
+def get_gebruiker_puzzels(naam):
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT puzzel_nr FROM gebruiker_puzzels WHERE naam = ?", (naam,))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    puzzels = [row[0] for row in rows]
+    return jsonify(puzzels)
+
+# --- API Endpoints for which participants did which questions ---
+@app.route("/api/questions", methods=["GET"])
+def get_questions():
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+    
+    # 1. Tel het totale aantal unieke gebruikers voor het percentage
+    cursor.execute("SELECT COUNT(DISTINCT gebruikersnaam) FROM gebruikers")
+    totaal_row = cursor.fetchone()
+    totaal_gebruikers = totaal_row[0] if totaal_row and totaal_row[0] > 0 else 1
+    
+    totaal_puzzels = 12
+    resultaat = []
+    
+    for i in range(1, totaal_puzzels + 1):
+        cursor.execute("SELECT naam FROM gebruiker_puzzels WHERE puzzel_nr = ?", (i,))
+        rows = cursor.fetchall()
+        namen = [row[0] for row in rows]
+        
+        aantal = len(namen)
+        percentage = round((aantal / totaal_gebruikers) * 100, 1)
+        
+        resultaat.append({
+            "nummer": i,
+            "number": f"Puzzel {i}",
+            "aantal": aantal,
+            "percentage": percentage,
+            "people": ", ".join(namen) if namen else "Nog door niemand opgelost"
+        })
+        
+    conn.close()
+    return jsonify(resultaat)
 
 # --- API Endpoints voor Authenticatie (Aanmelden & Inloggen) ---
 @app.route("/api/signup", methods=["POST"])

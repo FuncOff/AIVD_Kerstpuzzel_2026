@@ -22,7 +22,6 @@ async function fetchTableData() {
             <div class="progress-bar-container">
                 <div class="progress-bar-fill" style="width: ${percentage}%;"></div>
             </div>
-            <span>${percentage}%</span>
         </div>
       `;
 
@@ -30,6 +29,7 @@ async function fetchTableData() {
         "<td>" + naamVal + "</td>" +
         "<td>" + scoreVal + " / " + totaalPuzzels + "</td>" +
         "<td>" + voortgangHTML + "</td>" +
+        "<td>" + percentage + "%</td>" +
       "</tr>";
     });
 

@@ -5,7 +5,8 @@
 </head>
 <body>
     <div class="topnav">
-        <a href="index.html">Home</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="questions.html">Oplossingsoverzicht</a>
         <a href="login.html">Inloggen</a>
         <a href="signup.html">Aanmelden</a>
     </div>
@@ -42,7 +43,7 @@
                 alert("Succesvol ingelogd!");
                 // Sla eventueel op in localStorage dat je ingelogd bent
                 localStorage.setItem("ingelogdeGebruiker", gebruikersnaam);
-                window.location.href = "index.html";
+                window.location.href = "leaderboard.html";
             } else {
                 alert(result.error || "Inloggen mislukt");
             }

@@ -2,56 +2,89 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <title>Checklist - AIVD Kerstpuzzel</title>
 </head>
 <body>
     <div class="topnav">
-        <a href="index.html">Home</a>
-        <a href="userForm.html">Opdrachten</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="questions.html">Oplossingsoverzicht</a>
+        <a href="userForm.html">Checklist</a>
         <a href="https://www.aivd.nl/documenten/2025/12/10/aivd-kerstpuzzel-2025">Kerstpuzzel AIVD</a>
         <a href="login.html" id="login-link">Inloggen</a>
         <a href="signup.html" id="signup-link">Aanmelden</a>
     </div>
 
-    <h1>Checklist puzzels</h1>
+    <h1>AIVD Kerstpuzzel 2026</h1>
+
+    <h2>Checklist puzzels</h2>
 
     <form id="puzzel-invoer-form">
         <h3>Afgevinkte puzzels:</h3>
+        <!-- Zorg dat je tot 12 checkboxes hebt voor alle puzzels -->
         <label><input type="checkbox" class="puzzel-check" value="1"> Puzzel 1</label><br>
         <label><input type="checkbox" class="puzzel-check" value="2"> Puzzel 2</label><br>
         <label><input type="checkbox" class="puzzel-check" value="3"> Puzzel 3</label><br>
         <label><input type="checkbox" class="puzzel-check" value="4"> Puzzel 4</label><br>
-        <label><input type="checkbox" class="puzzel-check" value="5"> Puzzel 5</label><br><br>
+        <label><input type="checkbox" class="puzzel-check" value="5"> Puzzel 5</label><br>
+        <label><input type="checkbox" class="puzzel-check" value="6"> Puzzel 6</label><br>
+        <label><input type="checkbox" class="puzzel-check" value="7"> Puzzel 7</label><br>
+        <label><input type="checkbox" class="puzzel-check" value="8"> Puzzel 8</label><br>
+        <label><input type="checkbox" class="puzzel-check" value="9"> Puzzel 9</label><br>
+        <label><input type="checkbox" class="puzzel-check" value="10"> Puzzel 10</label><br>
+        <label><input type="checkbox" class="puzzel-check" value="11"> Puzzel 11</label><br>
+        <label><input type="checkbox" class="puzzel-check" value="12"> Puzzel 12</label><br><br>
 
         <button type="submit">Opslaan en naar Leaderboard</button>
     </form>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", async function() {
         let ingelogdeUser = localStorage.getItem("ingelogdeGebruiker");
-        if (ingelogdeUser) {
-            let loginLink = document.getElementById("login-link");
-            let signupLink = document.getElementById("signup-link");
-
-            if (loginLink) loginLink.remove();
-            if (signupLink) signupLink.remove();
-            
-            let nav = document.querySelector(".topnav");
-            if (nav) {
-                nav.innerHTML += ` | <span>Ingelogd als: <strong>${ingelogdeUser}</strong></span> <a href="#" id="logout-btn">Uitloggen</a>`;
-                
-                document.getElementById("logout-btn").addEventListener("click", function(e) {
-                    e.preventDefault();
-                    localStorage.removeItem("ingelogdeGebruiker");
-                    window.location.reload();
-                });
-            }
-        } else {
-            // Als je niet bent ingelogd en op de opdrachtenpagina komt, stuur direct door naar login
+        
+        if (!ingelogdeUser) {
             alert("Je moet eerst inloggen om opdrachten in te vullen!");
             window.location.href = "login.html";
+            return;
+        }
+
+        // Navigatiebalk aanpassen voor ingelogde gebruiker
+        let loginLink = document.getElementById("login-link");
+        let signupLink = document.getElementById("signup-link");
+
+        if (loginLink) loginLink.remove();
+        if (signupLink) signupLink.remove();
+        
+        let nav = document.querySelector(".topnav");
+        if (nav) {
+            nav.innerHTML += ` | <span>Ingelogd als: <strong>${ingelogdeUser}</strong></span> <a href="#" id="logout-btn">Uitloggen</a>`;
+            
+            document.getElementById("logout-btn").addEventListener("click", function(e) {
+                e.preventDefault();
+                localStorage.removeItem("ingelogdeGebruiker");
+                window.location.reload();
+            });
+        }
+
+        // Eerder opgeslagen vinkjes ophalen en automatisch aanzetten
+        try {
+            let response = await fetch(`/api/gebruiker-puzzels/${ingelogdeUser}`);
+            if (response.ok) {
+                let opgeslagenPuzzels = await response.json(); 
+                
+                let vinkjes = document.querySelectorAll(".puzzel-check");
+                vinkjes.path = vinkjes.forEach(cb => {
+                    let pNummer = parseInt(cb.value);
+                    if (opgeslagenPuzzels.includes(pNummer)) {
+                        cb.checked = true;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error("Fout bij ophalen opgeslagen puzzels:", error);
         }
     });
 
+    // Formulier verzenden
     document.getElementById("puzzel-invoer-form").addEventListener("submit", async function(e) {
         e.preventDefault();
 
@@ -64,24 +97,34 @@
         }
 
         let vinkjes = document.querySelectorAll(".puzzel-check");
-        let score = 0;
+        let puzzels = [];
+        
         vinkjes.forEach(cb => {
-            if (cb.checked) score++;
+            if (cb.checked) {
+                puzzels.push(parseInt(cb.value));
+            }
         });
 
-        // Stuur data naar de Flask backend
-        let response = await fetch("/api/deelnemers", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ naam: naam, score: score })
-        });
+        try {
+            // Stuur data naar Flask
+            let response = await fetch("/api/deelnemers", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ naam: naam, puzzels: puzzels })
+            });
 
-        if (response.ok) {
-            window.location.href = "index.html";
-        } else {
-            alert("Er is iets misgegaan bij het opslaan.");
+            let result = await response.json();
+
+            if (response.ok) {
+                window.location.href = "leaderboard.html";
+            } else {
+                alert("Fout bij opslaan: " + (result.error || "Onbekend"));
+            }
+        } catch (err) {
+            console.error("Netwerkfout:", err);
+            alert("Kan geen verbinding maken met de server.");
         }
     });
 </script>

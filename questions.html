@@ -23,8 +23,9 @@
 </head>
 <body>
     <div class="topnav">
-        <a href="index.html">Home</a>
-        <a href="userForm.html" id="opdrachten-link" style="display: none;">Opdrachten</a>
+        <a href="leaderboard.html">Leaderboard</a>
+        <a href="questions.html">Oplossingsoverzicht</a>
+        <a href="userForm.html" id="opdrachten-link" style="display: none;">Checklist</a>
         <a href="https://www.aivd.nl/documenten/2025/12/10/aivd-kerstpuzzel-2025">Kerstpuzzel AIVD</a>
         <a href="login.html" id="login-link">Inloggen</a>
         <a href="signup.html" id="signup-link">Aanmelden</a>
@@ -32,21 +33,21 @@
 
     <h1>AIVD Kerstpuzzel 2026</h1>
 
-    <h2>Leaderboard</h2>
+    <h2>Oplossingsoverzicht</h2>
     <table>
         <thead>
             <tr>
-                <th>Naam</th>
-                <th>Opgelost</th>
-                <th>Voortgang</th>
+                <th>Vraagnummer</th>
+                <th>Aantal oplossers</th>
+                <th>Oplossers</th>
             </tr>
         </thead>
-        <tbody id="leaderboard-body">
-            <!-- Javascript fills the leaderboard automatically-->
+        <tbody id="overview-body">
+            <!-- Javascript fills the overview automatically-->
         </tbody>
     </table>
 
-    <script src="leaderboard.js"></script>
+    <script src="questions.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
