@@ -64,6 +64,10 @@ def login_page():
 def signup_page():
     return app.send_static_file("signup.html")
 
+@app.route("/easteregg.html")
+def valsspeler_page():
+    return app.send_static_file("easteregg.html")
+
 
 # --- API Endpoints voor Deelnemers/Scores ---
 @app.route("/api/deelnemers", methods=["GET"])

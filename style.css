@@ -1,0 +1,273 @@
+/* --- AIVD KERSTPUZZEL: Delius EDITIE --- */
+
+@import url('https://fonts.googleapis.com/css2?family=Delius&display=swap');
+
+:root {
+    --bg-kader: #111c18;
+    --bg-papier: #0c1613;
+    --bg-paneel: #162621;
+    --bg-hover: #1e332b;
+    
+    --goud-accent: #d4af37;
+    --goud-licht: #f3e5ab;
+    --rood-aivd: #b32d2e;
+    --rood-fel: #e74c3c;
+    --groen-kerst: #27ae60;
+    --groen-donker: #1b4d3e;
+    
+    --tekst-wit: #f4f6f5;
+    --tekst-dim: #9fb3a8;
+    --rand-strak: #284237;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 40px 20px;
+    background-color: var(--bg-kader);
+    color: var(--tekst-wit);
+    background-image: 
+        radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.04) 0%, transparent 60%),
+        linear-gradient(45deg, #0f1a16 25%, transparent 25%), 
+        linear-gradient(-45deg, #0f1a16 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #0f1a16 75%), 
+        linear-gradient(-45deg, transparent 75%, #0f1a16 75%);
+    background-size: 100% 100%, 40px 40px, 40px 40px, 40px 40px, 40px 40px;
+    background-position: 0 0, 0 0, 0 20px, 20px -20px, -20px 0px;
+    min-height: 100vh;
+}
+
+h1, h2, h3 {
+    font-family: 'Delius', cursive, serif;
+    color: var(--goud-licht);
+    letter-spacing: 1px;
+}
+
+h1 {
+    font-size: 36px;
+    border-bottom: 2px solid var(--goud-accent);
+    padding-bottom: 12px;
+    margin-top: 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+h1::before {
+    content: "⭐🎄";
+    font-size: 30px;
+}
+
+h1::after {
+    content: "🎄⭐";
+    font-size: 30px;
+}
+
+/* --- Navigatiebalk --- */
+.topnav {
+    background-color: var(--bg-paneel);
+    padding: 14px 22px;
+    margin-bottom: 30px;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+.topnav a {
+    color: var(--tekst-wit);
+    text-decoration: none;
+    font-size: 16px;
+    font-family: 'Delius', cursive, sans-serif;
+    letter-spacing: 0.5px;
+    padding: 6px 12px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+
+.topnav a:hover {
+    color: var(--goud-accent);
+    background-color: var(--bg-hover);
+}
+
+.topnav span {
+    color: var(--goud-accent);
+    font-size: 15px;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+/* --- Tabellen --- */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--bg-papier);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+th, td {
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 14px;
+}
+
+th {
+    background-color: var(--bg-paneel);
+    color: var(--goud-licht);
+    font-family: 'Delius', cursive, monospace;
+    font-size: 14px;
+    letter-spacing: 1px;
+    border-bottom: 3px solid var(--goud-accent);
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover {
+    background-color: var(--bg-hover);
+}
+
+/* --- Voortgangsbalken --- */
+.progress-bar-container {
+    width: 160px;
+    background-color: var(--bg-kader);
+    border-radius: 3px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    border: 1px solid var(--goud-accent);
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.9);
+}
+
+.progress-bar-fill {
+    height: 16px;
+    background: linear-gradient(90deg, var(--groen-kerst), var(--groen-donker));
+    width: 0%;
+    transition: width 0.4s ease;
+}
+
+/* --- Formulieren & Authenticatie --- */
+form {
+    background: var(--bg-paneel);
+    padding: 35px;
+    border-radius: 6px;
+    max-width: 440px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+}
+
+label {
+    display: block;
+    font-size: 13px;
+    color: var(--goud-licht);
+    margin-bottom: 8px;
+    font-family: 'Delius', cursive, monospace;
+    letter-spacing: 0.5px;
+}
+
+input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--bg-kader);
+    border: 1px solid var(--rand-strak);
+    color: var(--tekst-wit);
+    border-radius: 3px;
+    box-sizing: border-box;
+    font-size: 14px;
+    font-family: 'Share Tech Mono', monospace;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+    border-color: var(--goud-accent);
+    outline: none;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+}
+
+button {
+    background: linear-gradient(135deg, var(--rood-aivd), #8e1c1d);
+    color: white;
+    padding: 12px 22px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'Delius', cursive, monospace;
+    font-size: 14px;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(179, 45, 46, 0.5);
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    background: linear-gradient(135deg, var(--rood-fel), var(--rood-aivd));
+    border-color: var(--goud-licht);
+}
+
+.puzzel-item {
+    margin-bottom: 12px;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--rand-strak);
+}
+
+.puzzel-item label {
+    color: var(--tekst-wit);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Inter', sans-serif;
+    text-transform: none;
+    font-size: 14px;
+}
+
+.puzzel-item input[type="checkbox"] {
+    accent-color: var(--rood-aivd);
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* Specifieke opmaak voor de elementen op de strafpagina zelf */
+#valsspeler-h1 {
+    font-size: 52px;
+    text-align: center;
+    text-shadow: 0 0 20px rgba(255, 0, 0, 0.9);
+    font-family: 'Delius', cursive, monospace;
+    margin-bottom: 20px;
+}
+
+#valsspeler-text {
+    font-size: 22px;
+    line-height: 1.6;
+    text-align: center;
+    font-family: 'Delius', cursive, monospace;
+    max-width: 600px;
+    margin: 0 auto 30px auto;
+}
+
+#valsspeler-btn {
+    background: linear-gradient(135deg, #ff0000, #660000);
+    color: white;
+    padding: 14px 28px;
+    border: 2px solid #ffcc00;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 18px;
+    text-transform: uppercase;
+    font-family: 'Delius', cursive, monospace;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+    text-decoration: none;
+    display: inline-block;
+    margin: 0 auto;
+}
+
+#valsspeler-btn:hover {
+    background: linear-gradient(135deg, #ff3333, #990000);
+    box-shadow: 0 0 30px rgba(255, 204, 0, 1);
+}

@@ -2,12 +2,8 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Checklist - AIVD Kerstpuzzel</title>
-    <style>
-        .puzzel-item {
-            margin-bottom: 8px;
-        }
-    </style>
+    <title>Checklist</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="topnav">
@@ -20,8 +16,6 @@
     </div>
 
     <h1>AIVD Kerstpuzzel 2026</h1>
-
-    <h2>Checklist puzzels</h2>
 
     <form id="puzzel-invoer-form">
         <h3>Afgevinkte puzzels:</h3>
@@ -63,17 +57,23 @@
             let qResponse = await fetch("/api/questions");
             let puzzelsLijst = await qResponse.json();
 
-            // Zorg dat de checklist ALTIJD netjes op volgorde van puzzelnummer staat (1, 2, 3...)
+            // Zorg dat de checklist netjes op volgorde van puzzelnummer staat
             puzzelsLijst.sort((a, b) => a.nummer - b.nummer);
 
+            // Haal de vinkjes op (dit is direct een array, bijv. [1, 3, 5])
             let userResponse = await fetch(`/api/gebruiker-puzzels/${ingelogdeUser}`);
-            let userData = await userResponse.json();
-            let opgeslagenPuzzels = userData.opgeslagen || [];
+            let opgeslagenPuzzels = await userResponse.json();
+
+            // Fallback voor de zekerheid als het geen array is
+            if (!Array.isArray(opgeslagenPuzzels)) {
+                opgeslagenPuzzels = [];
+            }
 
             let container = document.getElementById("checklist-container");
             container.innerHTML = "";
 
             puzzelsLijst.forEach(p => {
+                // Controleer of het nummer in de opgeslagen lijst voorkomt
                 let isChecked = opgeslagenPuzzels.includes(p.nummer) ? "checked" : "";
 
                 let itemHTML = `
@@ -97,16 +97,20 @@
 
         let naam = localStorage.getItem("ingelogdeGebruiker");
         if (!naam) {
-            alert("Je bent niet ingelogd!");
+            alert("Je moet eerst inloggen!");
             window.location.href = "login.html";
             return;
         }
 
         let vinkjes = document.querySelectorAll(".puzzel-check");
         let puzzels = [];
+        let aantalAangevinkt = 0;
+        let totaalPuzzels = vinkjes.length;
+
         vinkjes.forEach(cb => {
             if (cb.checked) {
                 puzzels.push(parseInt(cb.value));
+                aantalAangevinkt++;
             }
         });
 
@@ -119,7 +123,12 @@
 
             let result = await response.json();
             if (response.ok) {
-                window.location.href = "leaderboard.html";
+                // CONTROLE: Heeft de gebruiker ABSOLUUT ALLES aangevinkt?
+                if (aantalAangevinkt === totaalPuzzels && totaalPuzzels > 0) {
+                    window.location.href = "easteregg.html"; // Stuur door naar valsspeler!
+                } else {
+                    window.location.href = "leaderboard.html"; // Normaal naar leaderboard
+                }
             } else {
                 alert("Fout bij opslaan: " + (result.error || "Onbekend"));
             }
