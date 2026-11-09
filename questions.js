@@ -3,14 +3,6 @@ async function fetchOverviewData() {
     let response = await fetch("/api/questions");
     let questions = await response.json();
 
-    // Sorteer de puzzels op populariteit (meeste oplossers bovenaan)
-    questions.sort((a, b) => {
-      if (b.aantal !== a.aantal) {
-        return b.aantal - a.aantal;
-      }
-      return a.nummer - b.nummer; // Als het gelijk is op puzzelnummer
-    });
-
     let table = document.getElementById("overview-body");
     table.innerHTML = "";
 
@@ -26,6 +18,7 @@ async function fetchOverviewData() {
 
       table.innerHTML += "<tr>" +
         "<td><strong>" + q.number + "</strong></td>" +
+        "<td>" + q.punten + " pt</td>" +
         "<td>" + voortgangHTML + "</td>" +
         "<td>" + q.people + "</td>" +
       "</tr>";

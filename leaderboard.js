@@ -1,35 +1,38 @@
 async function fetchTableData() {
   try {
-    // get people with api route
+    let qResponse = await fetch("/api/questions");
+    let puzzelsLijst = await qResponse.json();
+    let totaalPuzzels = puzzelsLijst.length;
+
     let response = await fetch("/api/deelnemers");
-    let person = await response.json();
+    let personen = await response.json();
 
-    // clear leaderboard before filling
     let table = document.getElementById("leaderboard-body");
-    table.innerHTML;
+    table.innerHTML = "";
 
-    let totaalPuzzels = 12;
-
-    person.forEach(p => {
-      let scoreVal = p.score;
+    personen.forEach(p => {
+      let puntenVal = p.score;
+      let opgelostVal = p.opgelost;
       let naamVal = p.naam;
 
-      // visualise the completion percentage
-      let percentage = Math.min(100, Math.max(0, ((scoreVal / totaalPuzzels) * 100))).toFixed(1);
+      let percentage = totaalPuzzels > 0 
+        ? Math.min(100, Math.max(0, ((opgelostVal / totaalPuzzels) * 100))).toFixed(1) 
+        : 0;
 
       let voortgangHTML = `
         <div style="display: flex; align-items: center; gap: 10px;">
             <div class="progress-bar-container">
                 <div class="progress-bar-fill" style="width: ${percentage}%;"></div>
             </div>
+            <span>${percentage}%</span>
         </div>
       `;
 
       table.innerHTML += "<tr>" +
         "<td>" + naamVal + "</td>" +
-        "<td>" + scoreVal + " / " + totaalPuzzels + "</td>" +
+        "<td>" + puntenVal + "</td>" +
+        "<td>" + opgelostVal + " / " + totaalPuzzels + "</td>" +
         "<td>" + voortgangHTML + "</td>" +
-        "<td>" + percentage + "%</td>" +
       "</tr>";
     });
 
@@ -45,30 +48,32 @@ function sortTable() {
   switching = true;
 
   while (switching) {
-    // assume you dont switch in the first place
     switching = false;
     rows = table.rows;
 
-    // Loop through all the table rows
     for (i = 0; i < (rows.length - 1); i++) {
-      // helper for if statement below to execute a switch
       shouldSwitch = false;
-      // get the info from the current row and the next of the amount of puzzles solved
-      x = rows[i].getElementsByTagName("TD")[1];
-      y = rows[i + 1].getElementsByTagName("TD")[1];
+      
+      // Kolom 1 = Punten, Kolom 2 = Opgeloste puzzels (breuk zoals "5 / 12")
+      let puntenX = parseInt(rows[i].getElementsByTagName("TD")[1].innerText);
+      let puntenY = parseInt(rows[i + 1].getElementsByTagName("TD")[1].innerText);
 
-      let scoreX = parseInt(x.innerHTML.split("/")[0]);
-      let scoreY = parseInt(y.innerHTML.split("/")[0]);
-  
-      if (scoreX < scoreY) {
+      let opgelostX = parseInt(rows[i].getElementsByTagName("TD")[2].innerText.split("/")[0]);
+      let opgelostY = parseInt(rows[i + 1].getElementsByTagName("TD")[2].innerText.split("/")[0]);
+
+      // Sorteer op punten (hoogste eerst)
+      if (puntenX < puntenY) {
         shouldSwitch = true;
-        break;
+      } 
+      // Tiebreaker: als punten gelijk zijn, sorteer op aantal opgeloste puzzels
+      else if (puntenX === puntenY && opgelostX < opgelostY) {
+        shouldSwitch = true;
       }
-    }
-    if (shouldSwitch) {
-      // If a switch has been marked, make the switch and mark that a switch has been done
-      rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-      switching = true;
+
+      if (shouldSwitch) {
+        rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+        switching = true;
+      }
     }
   }
 }

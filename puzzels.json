@@ -1,0 +1,14 @@
+[
+    {"nummer": 1, "naam": "Puzzel 1", "punten": 2},
+    {"nummer": 2, "naam": "Puzzel 2", "punten": 4},
+    {"nummer": 3, "naam": "Puzzel 3", "punten": 3},
+    {"nummer": 4, "naam": "Puzzel 4", "punten": 1},
+    {"nummer": 5, "naam": "Puzzel 5", "punten": 1},
+    {"nummer": 6, "naam": "Puzzel 6", "punten": 2},
+    {"nummer": 7, "naam": "Puzzel 7", "punten": 1},
+    {"nummer": 8, "naam": "Puzzel 8", "punten": 3},
+    {"nummer": 9, "naam": "Puzzel 9", "punten": 1},
+    {"nummer": 10, "naam": "Puzzel 10", "punten": 2},
+    {"nummer": 11, "naam": "Puzzel 11", "punten": 1},
+    {"nummer": 12, "naam": "Puzzel 12", "punten": 2}
+]

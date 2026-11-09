@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import sqlite3
+import json
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__, static_folder=".", static_url_path="")
@@ -69,35 +70,65 @@ def signup_page():
 def get_deelnemers():
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT naam, score FROM deelnemers ORDER BY score DESC")
+    
+    # We halen de naam en score op uit deelnemers
+    cursor.execute("SELECT naam, score FROM deelnemers")
     rows = cursor.fetchall()
+    
+    resultaat = []
+    for row in rows:
+        naam = row[0]
+        score = row[1]
+        
+        # Tel hoeveel unieke puzzels deze gebruiker daadwerkelijk heeft opgelost (voor de tiebreaker/weergave)
+        cursor.execute("SELECT COUNT(*) FROM gebruiker_puzzels WHERE naam = ?", (naam,))
+        aantal_opgelost = cursor.fetchone()[0]
+        
+        resultaat.append({
+            "naam": naam,
+            "score": score,             # Totale punten
+            "opgelost": aantal_opgelost # Aantal opgeloste puzzels
+        })
+        
     conn.close()
     
-    resultaat = [{"naam": row[0], "score": row[1]} for row in rows]
+    # Sorteer direct vanuit Flask of laat JS het doen; we sorteren hier op score (hoogste eerst)
+    resultaat.sort(key=lambda x: (x["score"], x["opgelost"]), reverse=True)
+    
     return jsonify(resultaat)
 
 @app.route("/api/deelnemers", methods=["POST"])
 def add_or_update_deelnemer():
     data = request.json
     naam = data.get("naam")
-    puzzels = data.get("puzzels", [])  # Ontvang de lijst met puzzelnummers
+    puzzels = data.get("puzzels", []) # Lijst van opgeloste puzzelnummers
 
     if not naam:
         return jsonify({"error": "Ongeldige invoer"}), 400
 
-    # Bereken de score automatisch op basis van hoeveel puzzels er zijn aangevinkt
-    score = len(puzzels)
+    # Laad de puzzels uit het JSON-bestand om de punten op te tellen
+    try:
+        with open("puzzels.json", "r", encoding="utf-8") as f:
+            puzzels_lijst = json.load(f)
+    except FileNotFoundError:
+        puzzels_lijst = []
+
+    # Maak een dictionary van puzzel_nummer -> punten
+    punten_map = {p["nummer"]: p.get("punten", 1) for p in puzzels_lijst}
+
+    # Bereken de totale score op basis van de punten van de aangevinkte puzzels
+    score = sum(punten_map.get(p_nr, 1) for p_nr in puzzels)
 
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
     
-    # 1. Update de totale score in de deelnemers-tabel
+    # 1. Update totale score in deelnemers tabel
     cursor.execute("""
         INSERT INTO deelnemers (naam, score) VALUES (?, ?)
         ON CONFLICT(naam) DO UPDATE SET score=excluded.score
     """, (naam, score))
     
-    # 2. Verwijder de oude vinkjes van deze gebruiker en sla de nieuwe op
+    # 2. Verwijder oude vinkjes en sla de nieuwe op
     cursor.execute("DELETE FROM gebruiker_puzzels WHERE naam = ?", (naam,))
     for p_nr in puzzels:
         cursor.execute("INSERT OR IGNORE INTO gebruiker_puzzels (naam, puzzel_nr) VALUES (?, ?)", (naam, p_nr))
@@ -121,19 +152,29 @@ def get_gebruiker_puzzels(naam):
 # --- API Endpoints for which participants did which questions ---
 @app.route("/api/questions", methods=["GET"])
 def get_questions():
+    try:
+        with open("puzzels.json", "r", encoding="utf-8") as f:
+            puzzels_lijst = json.load(f)
+    except FileNotFoundError:
+        puzzels_lijst = []
+
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
     
-    # 1. Tel het totale aantal unieke gebruikers voor het percentage
+    # Tel het totale aantal unieke gebruikers voor het percentage
     cursor.execute("SELECT COUNT(DISTINCT gebruikersnaam) FROM gebruikers")
     totaal_row = cursor.fetchone()
     totaal_gebruikers = totaal_row[0] if totaal_row and totaal_row[0] > 0 else 1
     
-    totaal_puzzels = 12
     resultaat = []
     
-    for i in range(1, totaal_puzzels + 1):
-        cursor.execute("SELECT naam FROM gebruiker_puzzels WHERE puzzel_nr = ?", (i,))
+    for p in puzzels_lijst:
+        p_nr = p["nummer"]
+        p_naam = p.get("naam", f"Puzzel {p_nr}")
+        p_punten = p.get("punten", 1)  # Haal de punten op uit JSON
+        
+        # Haal de namen op die deze puzzel hebben opgelost
+        cursor.execute("SELECT naam FROM gebruiker_puzzels WHERE puzzel_nr = ?", (p_nr,))
         rows = cursor.fetchall()
         namen = [row[0] for row in rows]
         
@@ -141,14 +182,20 @@ def get_questions():
         percentage = round((aantal / totaal_gebruikers) * 100, 1)
         
         resultaat.append({
-            "nummer": i,
-            "number": f"Puzzel {i}",
+            "nummer": p_nr,
+            "number": p_naam,
+            "punten": p_punten,
             "aantal": aantal,
             "percentage": percentage,
             "people": ", ".join(namen) if namen else "Nog door niemand opgelost"
         })
         
     conn.close()
+    
+    # Sorteer primair op aantal oplossers (aflopend: -x["aantal"] zet de meeste oplossers bovenaan)
+    # Secundair (tiebreaker): op punten (oplopend: x["punten"])
+    resultaat.sort(key=lambda x: (-x["aantal"], x["punten"]))
+    
     return jsonify(resultaat)
 
 # --- API Endpoints voor Authenticatie (Aanmelden & Inloggen) ---

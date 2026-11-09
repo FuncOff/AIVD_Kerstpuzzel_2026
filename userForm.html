@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Checklist - AIVD Kerstpuzzel</title>
+    <style>
+        .puzzel-item {
+            margin-bottom: 8px;
+        }
+    </style>
 </head>
 <body>
     <div class="topnav">
@@ -20,20 +25,10 @@
 
     <form id="puzzel-invoer-form">
         <h3>Afgevinkte puzzels:</h3>
-        <!-- Zorg dat je tot 12 checkboxes hebt voor alle puzzels -->
-        <label><input type="checkbox" class="puzzel-check" value="1"> Puzzel 1</label><br>
-        <label><input type="checkbox" class="puzzel-check" value="2"> Puzzel 2</label><br>
-        <label><input type="checkbox" class="puzzel-check" value="3"> Puzzel 3</label><br>
-        <label><input type="checkbox" class="puzzel-check" value="4"> Puzzel 4</label><br>
-        <label><input type="checkbox" class="puzzel-check" value="5"> Puzzel 5</label><br>
-        <label><input type="checkbox" class="puzzel-check" value="6"> Puzzel 6</label><br>
-        <label><input type="checkbox" class="puzzel-check" value="7"> Puzzel 7</label><br>
-        <label><input type="checkbox" class="puzzel-check" value="8"> Puzzel 8</label><br>
-        <label><input type="checkbox" class="puzzel-check" value="9"> Puzzel 9</label><br>
-        <label><input type="checkbox" class="puzzel-check" value="10"> Puzzel 10</label><br>
-        <label><input type="checkbox" class="puzzel-check" value="11"> Puzzel 11</label><br>
-        <label><input type="checkbox" class="puzzel-check" value="12"> Puzzel 12</label><br><br>
-
+        <div id="checklist-container">
+            <!-- Wordt hier automatisch ingeladen vanuit puzzels.json -->
+        </div>
+        <br>
         <button type="submit">Opslaan en naar Leaderboard</button>
     </form>
 
@@ -50,14 +45,12 @@
         // Navigatiebalk aanpassen voor ingelogde gebruiker
         let loginLink = document.getElementById("login-link");
         let signupLink = document.getElementById("signup-link");
-
         if (loginLink) loginLink.remove();
         if (signupLink) signupLink.remove();
         
         let nav = document.querySelector(".topnav");
         if (nav) {
             nav.innerHTML += ` | <span>Ingelogd als: <strong>${ingelogdeUser}</strong></span> <a href="#" id="logout-btn">Uitloggen</a>`;
-            
             document.getElementById("logout-btn").addEventListener("click", function(e) {
                 e.preventDefault();
                 localStorage.removeItem("ingelogdeGebruiker");
@@ -65,31 +58,44 @@
             });
         }
 
-        // Eerder opgeslagen vinkjes ophalen en automatisch aanzetten
+        // --- LAAD PUZZELS EN VINKJES DYNAMISCH IN ---
         try {
-            let response = await fetch(`/api/gebruiker-puzzels/${ingelogdeUser}`);
-            if (response.ok) {
-                let opgeslagenPuzzels = await response.json(); 
-                
-                let vinkjes = document.querySelectorAll(".puzzel-check");
-                vinkjes.path = vinkjes.forEach(cb => {
-                    let pNummer = parseInt(cb.value);
-                    if (opgeslagenPuzzels.includes(pNummer)) {
-                        cb.checked = true;
-                    }
-                });
-            }
+            let qResponse = await fetch("/api/questions");
+            let puzzelsLijst = await qResponse.json();
+
+            // Zorg dat de checklist ALTIJD netjes op volgorde van puzzelnummer staat (1, 2, 3...)
+            puzzelsLijst.sort((a, b) => a.nummer - b.nummer);
+
+            let userResponse = await fetch(`/api/gebruiker-puzzels/${ingelogdeUser}`);
+            let userData = await userResponse.json();
+            let opgeslagenPuzzels = userData.opgeslagen || [];
+
+            let container = document.getElementById("checklist-container");
+            container.innerHTML = "";
+
+            puzzelsLijst.forEach(p => {
+                let isChecked = opgeslagenPuzzels.includes(p.nummer) ? "checked" : "";
+
+                let itemHTML = `
+                    <div class="puzzel-item">
+                        <label>
+                            <input type="checkbox" class="puzzel-check" value="${p.nummer}" ${isChecked}> ${p.number}
+                        </label>
+                    </div>
+                `;
+                container.innerHTML += itemHTML;
+            });
+
         } catch (error) {
-            console.error("Fout bij ophalen opgeslagen puzzels:", error);
+            console.error("Fout bij inladen checklist:", error);
         }
     });
 
-    // Formulier verzenden
+    // Formulier verzenden en opslaan
     document.getElementById("puzzel-invoer-form").addEventListener("submit", async function(e) {
         e.preventDefault();
 
         let naam = localStorage.getItem("ingelogdeGebruiker");
-        
         if (!naam) {
             alert("Je bent niet ingelogd!");
             window.location.href = "login.html";
@@ -98,7 +104,6 @@
 
         let vinkjes = document.querySelectorAll(".puzzel-check");
         let puzzels = [];
-        
         vinkjes.forEach(cb => {
             if (cb.checked) {
                 puzzels.push(parseInt(cb.value));
@@ -106,17 +111,13 @@
         });
 
         try {
-            // Stuur data naar Flask
             let response = await fetch("/api/deelnemers", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ naam: naam, puzzels: puzzels })
             });
 
             let result = await response.json();
-
             if (response.ok) {
                 window.location.href = "leaderboard.html";
             } else {
