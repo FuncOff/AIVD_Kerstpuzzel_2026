@@ -7,6 +7,7 @@ async function fetchOverviewData() {
     table.innerHTML = "";
 
     questions.forEach(q => {
+      // Completion bar
       let voortgangHTML = `
         <div style="display: flex; align-items: center; gap: 10px;">
             <div class="progress-bar-container">
@@ -16,6 +17,7 @@ async function fetchOverviewData() {
         </div>
       `;
 
+      // Update html table
       table.innerHTML += "<tr>" +
         "<td><strong>" + q.number + "</strong></td>" +
         "<td>" + q.punten + " pt</td>" +
